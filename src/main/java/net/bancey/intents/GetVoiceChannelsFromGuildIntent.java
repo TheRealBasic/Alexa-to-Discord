@@ -6,7 +6,7 @@ import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
 import net.bancey.AlexaToDiscord;
 import net.bancey.services.DiscordApp;
-import net.dv8tion.jda.core.entities.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
 
 import java.util.ArrayList;
 
@@ -37,7 +37,7 @@ public class GetVoiceChannelsFromGuildIntent extends AlexaDiscordIntent {
                     }
                 }
             } else {
-                speechText = "I couldn't find any text channels in that guild!";
+                speechText = "I couldn't find any voice channels in that guild!";
             }
 
             SimpleCard card = new SimpleCard();

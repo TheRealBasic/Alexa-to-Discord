@@ -6,7 +6,7 @@ import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
 import net.bancey.AlexaToDiscord;
 import net.bancey.services.DiscordApp;
-import net.dv8tion.jda.core.entities.Role;
+import net.dv8tion.jda.api.entities.Role;
 
 import java.util.ArrayList;
 
@@ -28,7 +28,7 @@ public class GetRolesFromGuildIntent extends AlexaDiscordIntent {
 
             String speechText;
             if(roles.size() > 0) {
-                speechText = "I found " + roles.size() + " roles in that guild. THey are: ";
+                speechText = "I found " + roles.size() + " roles in that guild. They are: ";
                 for(int i = 0; i<roles.size(); i++) {
                     if(i != (roles.size() - 1)) {
                         speechText += roles.get(i).getName() + ", ";

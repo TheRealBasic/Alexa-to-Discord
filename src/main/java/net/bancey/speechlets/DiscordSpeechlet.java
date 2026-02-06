@@ -5,7 +5,6 @@ import com.amazon.speech.slu.Slot;
 import com.amazon.speech.speechlet.*;
 import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.Reprompt;
-import com.amazon.speech.ui.SimpleCard;
 import net.bancey.intents.*;
 
 import java.util.Map;
@@ -17,7 +16,14 @@ import java.util.Map;
 public class DiscordSpeechlet implements Speechlet {
 
     private String selectedGuild;
-    private AlexaDiscordIntent[] intents = {new GetAllChannelsFromGuildIntent("GetAllChannelsFromGuildIntent"), new GetTextChannelsFromGuildIntent("GetTextChannelsFromGuildIntent"), new GetVoiceChannelsFromGuildIntent("GetVoiceChannelsFromGuildIntent"),new GetGuildsIntent("GetGuildsIntent"), new SelectGuildIntent("SelectGuildIntent"), new GetRolesFromGuildIntent("GetRolesFromGuildIntent")};
+    private final AlexaDiscordIntent[] intents = {
+            new GetAllChannelsFromGuildIntent("GetAllChannelsFromGuildIntent"),
+            new GetTextChannelsFromGuildIntent("GetTextChannelsFromGuildIntent"),
+            new GetVoiceChannelsFromGuildIntent("GetVoiceChannelsFromGuildIntent"),
+            new GetGuildsIntent("GetGuildsIntent"),
+            new SelectGuildIntent("SelectGuildIntent"),
+            new GetRolesFromGuildIntent("GetRolesFromGuildIntent")
+    };
     private static final String GUILD_KEY = "Guild";
 
     @Override
@@ -33,31 +39,30 @@ public class DiscordSpeechlet implements Speechlet {
     @Override
     public SpeechletResponse onIntent(IntentRequest intentRequest, Session session) throws SpeechletException {
         Intent intent = intentRequest.getIntent();
-        if("AMAZON.StopIntent".equals(intent.getName())) {
+        if ("AMAZON.StopIntent".equals(intent.getName()) || "AMAZON.CancelIntent".equals(intent.getName())) {
             return onExitResponse();
-        } else if("AMAZON.CancelIntent".equals(intent.getName())) {
-            return onExitResponse();
-        } else if("AMAZON.HelpIntent".equals(intent.getName())) {
+        } else if ("AMAZON.HelpIntent".equals(intent.getName())) {
             return onLaunchResponse();
-        } else {
-            for(AlexaDiscordIntent alexaDiscordIntent: intents) {
-                if(alexaDiscordIntent.getName().equals(intent.getName())) {
-                    if(alexaDiscordIntent.getName().equals("SelectGuildIntent")) {
-                        SelectGuildIntent guildIntent = (SelectGuildIntent) alexaDiscordIntent;
-                        Map<String, Slot> slots = intent.getSlots();
-                        Slot guildSlot = slots.get(GUILD_KEY);
-                        SpeechletResponse response = guildIntent.handle(guildSlot.getValue());
-                        selectedGuild = guildIntent.getSelectedGuild();
-                        return response;
-                    }
-                    if(alexaDiscordIntent.getName().equals("GetTextChannelsFromGuildIntent") || alexaDiscordIntent.getName().equals("GetVoiceChannelsFromGuildIntent") || alexaDiscordIntent.getName().equals("GetAllChannelsFromGuildIntent") || alexaDiscordIntent.getName().equals("GetRolesFromGuildIntent")) {
-                        if(selectedGuild != null) {
-                            return alexaDiscordIntent.handle(selectedGuild);
-                        }
-                        return alexaDiscordIntent.handle(null);
-                    }
-                    return alexaDiscordIntent.handle("s u c c m y f u c c");
+        }
+
+        for (AlexaDiscordIntent alexaDiscordIntent : intents) {
+            if (alexaDiscordIntent.getName().equals(intent.getName())) {
+                if ("SelectGuildIntent".equals(alexaDiscordIntent.getName())) {
+                    SelectGuildIntent guildIntent = (SelectGuildIntent) alexaDiscordIntent;
+                    Map<String, Slot> slots = intent.getSlots();
+                    Slot guildSlot = slots == null ? null : slots.get(GUILD_KEY);
+                    String slotValue = guildSlot == null ? null : guildSlot.getValue();
+                    SpeechletResponse response = guildIntent.handle(slotValue);
+                    selectedGuild = guildIntent.getSelectedGuild();
+                    return response;
                 }
+                if ("GetTextChannelsFromGuildIntent".equals(alexaDiscordIntent.getName())
+                        || "GetVoiceChannelsFromGuildIntent".equals(alexaDiscordIntent.getName())
+                        || "GetAllChannelsFromGuildIntent".equals(alexaDiscordIntent.getName())
+                        || "GetRolesFromGuildIntent".equals(alexaDiscordIntent.getName())) {
+                    return alexaDiscordIntent.handle(selectedGuild);
+                }
+                return alexaDiscordIntent.handle(null);
             }
         }
         return onErrorResponse();

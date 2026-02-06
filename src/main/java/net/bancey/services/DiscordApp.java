@@ -1,14 +1,18 @@
 package net.bancey.services;
 
-import net.dv8tion.jda.core.AccountType;
-import net.dv8tion.jda.core.JDA;
-import net.dv8tion.jda.core.JDABuilder;
-import net.dv8tion.jda.core.entities.*;
-import net.dv8tion.jda.core.exceptions.RateLimitedException;
+import net.dv8tion.jda.api.JDA;
+import net.dv8tion.jda.api.JDABuilder;
+import net.dv8tion.jda.api.entities.Guild;
+import net.dv8tion.jda.api.entities.Role;
+import net.dv8tion.jda.api.entities.channel.concrete.TextChannel;
+import net.dv8tion.jda.api.entities.channel.concrete.VoiceChannel;
+import net.dv8tion.jda.api.entities.channel.middleman.GuildChannel;
+import net.dv8tion.jda.api.requests.GatewayIntent;
+import net.dv8tion.jda.api.utils.MemberCachePolicy;
 
 import javax.security.auth.login.LoginException;
 import java.util.ArrayList;
-import java.util.List;
+import java.util.EnumSet;
 
 /**
  *
@@ -19,65 +23,68 @@ public class DiscordApp {
     private JDA jda = null;
 
     public DiscordApp(String token) {
+        if (token == null || token.trim().isEmpty()) {
+            return;
+        }
+
         try {
-            jda = new JDABuilder(AccountType.BOT).setToken(token).buildBlocking();
-            jda.getPresence().setGame(Game.of("I am a non sentient being."));
-        } catch (InterruptedException | RateLimitedException | LoginException e) {
-            e.printStackTrace();
+            jda = JDABuilder.createDefault(token)
+                    .enableIntents(EnumSet.of(GatewayIntent.GUILD_MESSAGES, GatewayIntent.GUILD_VOICE_STATES))
+                    .setMemberCachePolicy(MemberCachePolicy.NONE)
+                    .build()
+                    .awaitReady();
+            jda.getPresence().setActivity(net.dv8tion.jda.api.entities.Activity.playing("I am a non sentient being."));
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            jda = null;
+        } catch (LoginException e) {
+            jda = null;
         }
     }
 
     public ArrayList<TextChannel> getTextChannelsInGuild(String guildId) {
-        if (jda != null) {
-            ArrayList<TextChannel> channels = new ArrayList<>();
-            Guild guild = jda.getGuildById(guildId);
-            channels.addAll(guild.getTextChannels());
-            return channels;
+        Guild guild = getGuildById(guildId);
+        if (guild == null) {
+            return new ArrayList<>();
         }
-        return null;
+        return new ArrayList<>(guild.getTextChannels());
     }
 
     public ArrayList<VoiceChannel> getVoiceChannelsInGuild(String guildId) {
-        if(jda != null) {
-            ArrayList<VoiceChannel> channels = new ArrayList<>();
-            Guild guild = jda.getGuildById(guildId);
-            channels.addAll(guild.getVoiceChannels());
-            return channels;
+        Guild guild = getGuildById(guildId);
+        if (guild == null) {
+            return new ArrayList<>();
         }
-        return null;
+        return new ArrayList<>(guild.getVoiceChannels());
     }
 
-    public ArrayList<Channel> getAllChannelsInGuild(String guildId) {
-        ArrayList<Channel> allChannels = new ArrayList<>();
-        ArrayList<VoiceChannel> voiceChannels = getVoiceChannelsInGuild(guildId);
-        ArrayList<TextChannel> textChannels = getTextChannelsInGuild(guildId);
-        allChannels.addAll(voiceChannels);
-        allChannels.addAll(textChannels);
-        return allChannels;
+    public ArrayList<GuildChannel> getAllChannelsInGuild(String guildId) {
+        Guild guild = getGuildById(guildId);
+        if (guild == null) {
+            return new ArrayList<>();
+        }
+        return new ArrayList<>(guild.getChannels());
     }
 
     public ArrayList<Guild> getGuilds() {
-        if (jda != null) {
-            ArrayList<Guild> guilds = new ArrayList<>();
-            guilds.addAll(jda.getGuilds());
-            return guilds;
+        if (jda == null) {
+            return new ArrayList<>();
         }
-        return null;
+        return new ArrayList<>(jda.getGuilds());
     }
 
     public Guild getGuildById(String guildId) {
-        if(jda != null) {
-            return jda.getGuildById(guildId);
+        if (jda == null || guildId == null || guildId.trim().isEmpty()) {
+            return null;
         }
-        return null;
+        return jda.getGuildById(guildId);
     }
 
     public ArrayList<Role> getRolesFromGuild(String guildId) {
-        if(jda != null) {
-            ArrayList<Role> roles = new ArrayList<>();
-            roles.addAll(jda.getGuildById(guildId).getRoles());
-            return roles;
+        Guild guild = getGuildById(guildId);
+        if (guild == null) {
+            return new ArrayList<>();
         }
-        return null;
+        return new ArrayList<>(guild.getRoles());
     }
 }
