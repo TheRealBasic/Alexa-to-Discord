@@ -5,7 +5,7 @@ import com.amazon.speech.ui.PlainTextOutputSpeech;
 import com.amazon.speech.ui.SimpleCard;
 import net.bancey.AlexaToDiscord;
 import net.bancey.services.DiscordApp;
-import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.api.entities.Guild;
 
 import java.util.ArrayList;
 
@@ -13,7 +13,7 @@ import java.util.ArrayList;
  *
  * Created by Bancey on 13/12/2016.
  */
-public class GetGuildsIntent extends AlexaDiscordIntent{
+public class GetGuildsIntent extends AlexaDiscordIntent {
 
     public GetGuildsIntent(String name) {
         super(name);
@@ -25,20 +25,18 @@ public class GetGuildsIntent extends AlexaDiscordIntent{
         ArrayList<Guild> guilds = discordApp.getGuilds();
 
         String speechText;
-        if (guilds.size() > 0 && guilds.size() > 1) {
-            speechText = "There are " + guilds.size() + " that I am connected to. They are: ";
+        if (guilds.size() > 1) {
+            speechText = "There are " + guilds.size() + " guilds that I am connected to. They are: ";
             for (int i = 0; i < guilds.size(); i++) {
+                int spokenNumber = i + 1;
                 if (i != (guilds.size() - 1)) {
-                    speechText += i + ". " + guilds.get(i).getName() + ", ";
+                    speechText += spokenNumber + ". " + guilds.get(i).getName() + ", ";
                 } else {
-                    speechText += "and " + i + ". " +  guilds.get(i).getName() + ".";
+                    speechText += "and " + spokenNumber + ". " + guilds.get(i).getName() + ".";
                 }
             }
-        } else if(guilds.size() > 0 && guilds.size() < 2) {
-            speechText = "There is " + guilds.size() + " that I am connected to. It is ";
-            for(int i = 0; i < guilds.size(); i++) {
-                speechText += i + ". " + guilds.get(i).getName() + ".";
-            }
+        } else if (guilds.size() == 1) {
+            speechText = "There is 1 guild that I am connected to. It is 1. " + guilds.get(0).getName() + ".";
         } else {
             speechText = "I couldn't find any guilds!";
         }

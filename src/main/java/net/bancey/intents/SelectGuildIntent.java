@@ -6,7 +6,7 @@ import com.amazon.speech.ui.Reprompt;
 import com.amazon.speech.ui.SimpleCard;
 import net.bancey.AlexaToDiscord;
 import net.bancey.services.DiscordApp;
-import net.dv8tion.jda.core.entities.Guild;
+import net.dv8tion.jda.api.entities.Guild;
 
 import java.util.ArrayList;
 
@@ -27,19 +27,31 @@ public class SelectGuildIntent extends AlexaDiscordIntent {
         DiscordApp discordApp = AlexaToDiscord.getDiscordInstance();
         ArrayList<Guild> guilds = discordApp.getGuilds();
 
-        String speechText, repromptText;
-        if (guild != null && !(Integer.parseInt(guild) > (guilds.size() - 1)) && !(Integer.parseInt(guild) < 0)) {
-            int guildNumber = Integer.parseInt(guild);
-            speechText = "The guild you have selected is " + guilds.get(guildNumber).getName() + ".";
-            repromptText = "What would you like to do now?";
-            selectedGuild = guilds.get(guildNumber).getId();
+        String speechText;
+        String repromptText;
+        if (guild != null) {
+            try {
+                int guildNumber = Integer.parseInt(guild);
+                int index = guildNumber - 1;
+                if (index >= 0 && index < guilds.size()) {
+                    speechText = "The guild you have selected is " + guilds.get(index).getName() + ".";
+                    repromptText = "What would you like to do now?";
+                    selectedGuild = guilds.get(index).getId();
+                } else {
+                    speechText = "Sorry, that guild number is not valid. Please say get guilds to hear the list again.";
+                    repromptText = "Please try again.";
+                }
+            } catch (NumberFormatException e) {
+                speechText = "Sorry, I couldn't understand that guild number. Please try again.";
+                repromptText = "Please try again.";
+            }
         } else {
-            speechText = "Sorry I didn't pick up a guild number or the number you said wasn't accepted. If you are unsure of the number please say get guilds first.";
+            speechText = "Sorry I didn't pick up a guild number. If you are unsure of the number please say get guilds first.";
             repromptText = "Please try again.";
         }
 
         SimpleCard card = new SimpleCard();
-        card.setTitle("Channels found!");
+        card.setTitle("Guild selection");
         card.setContent(speechText);
 
         PlainTextOutputSpeech speech = new PlainTextOutputSpeech();
